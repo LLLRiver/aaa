@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>智能信贷审批工作台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2563eb",
+            secondary: "#64748b"
+          },
+          borderRadius: {
+            'none': '0px',
+            'sm': '2px',
+            DEFAULT: '4px',
+            'md': '8px',
+            'lg': '12px',
+            'xl': '16px',
+            '2xl': '20px',
+            '3xl': '24px',
+            'full': '9999px',
+            'button': '4px'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    .font-logo {
+      font-family: "Pacifico", serif;
+    }
+
+    .task-item:hover {
+      background-color: #f1f5f9;
+    }
+    .task-item.active {
+      background-color: #dbeafe;
+    }
+
+    .risk-tag-high {
+      background-color: #fee2e2;
+      color: #ef4444;
+    }
+
+    .risk-tag-medium {
+      background-color: #ffedd5;
+      color: #f97316;
+    }
+
+    .risk-tag-low {
+      background-color: #dcfce7;
+      color: #22c55e;
+    }
+
+    .sort-btn.active {
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .filter-tag.active {
+      background-color: #2563eb;
+      color: white;
+    }
+
+    button:focus,
+    input:focus,
+    textarea:focus {
+      outline: none;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-[1024px] flex flex-col">
+  <!-- Top Navigation -->
+  <header class="h-[64px] bg-white border-b border-gray-200 flex items-center px-6 justify-between">
+    <div class="flex items-center space-x-2">
+      <div class="font-logo text-xl text-primary">logo</div>
+      <span class="text-lg font-semibold">智能信贷审批工作台</span>
+    </div>
+    <div class="flex items-center space-x-4">
+      <div class="relative">
+        <i class="fas fa-bell text-gray-500 w-5 h-5 flex items-center justify-center"></i>
+        <span class="absolute top-[-4px] right-[-4px] bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+          <i class="fas fa-user text-gray-600"></i>
+        </div>
+        <span>张伟</span>
+      </div>
+    </div>
+  </header>
+  <!-- Main Content -->
+  <main class="flex-1 flex p-6 gap-6 max-w-[1440px] mx-auto w-full">
+    <!-- Left Panel (60%) -->
+    <section class="w-[60%] flex flex-col gap-6">
+      
+      <!-- Metrics Cards -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-sm text-gray-500">今日待审</div>
+          <div class="text-2xl font-bold mt-1">15 笔</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-sm text-gray-500">本周已完成</div>
+          <div class="text-2xl font-bold mt-1">42 笔</div>
+        </div>
+      </div>
+
+      <!-- Filters and Sorting -->
+      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex space-x-2">
+            <button class="filter-tag px-3 py-1 text-sm rounded-md active">全部</button>
+            <button class="filter-tag px-3 py-1 text-sm rounded-md">高风险</button>
+            <button class="filter-tag px-3 py-1 text-sm rounded-md">需补充材料</button>
+          </div>
+          <div class="flex space-x-4">
+            <div class="flex items-center space-x-1">
+              <span class="text-sm">申请时间</span>
+              <button class="sort-btn text-sm flex items-center">
+                <i class="fas fa-sort-down ml-1"></i>
+              </button>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="text-sm">金额</span>
+              <button class="sort-btn text-sm flex items-center">
+                <i class="fas fa-sort ml-1"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task List Table -->
+        <div class="border border-gray-200 rounded-md overflow-hidden">
+          <div class="grid grid-cols-12 bg-gray-50 text-gray-500 text-sm py-2 px-4">
+            <div class="col-span-4">企业名称</div>
+            <div class="col-span-3">申请金额</div>
+            <div class="col-span-3">AI风险等级</div>
+            <div class="col-span-2">申请时间</div>
+          </div>
+          <div class="max-h-[500px] overflow-y-auto custom-scrollbar">
+            <!-- Task Item 1 (Active) -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer active">
+              <div class="col-span-4 font-medium">杭州智联科技有限公司</div>
+              <div class="col-span-3">¥ 500,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-medium px-2 py-1 text-xs rounded-full">中风险</span>
+              </div>
+              <div class="col-span-2">2023-07-15</div>
+            </div>
+            <!-- Task Item 2 -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer">
+              <div class="col-span-4">上海新创网络技术有限公司</div>
+              <div class="col-span-3">¥ 1,200,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-high px-2 py-1 text-xs rounded-full">高风险</span>
+              </div>
+              <div class="col-span-2">2023-07-14</div>
+            </div>
+            <!-- Task Item 3 -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer">
+              <div class="col-span-4">广州蓝海信息技术有限公司</div>
+              <div class="col-span-3">¥ 800,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-low px-2 py-1 text-xs rounded-full">低风险</span>
+              </div>
+              <div class="col-span-2">2023-07-13</div>
+            </div>
+            <!-- Task Item 4 -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer">
+              <div class="col-span-4">成都云帆科技发展有限公司</div>
+              <div class="col-span-3">¥ 300,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-medium px-2 py-1 text-xs rounded-full">中风险</span>
+              </div>
+              <div class="col-span-2">2023-07-12</div>
+            </div>
+            <!-- Task Item 5 -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer">
+              <div class="col-span-4">武汉星耀电子有限公司</div>
+              <div class="col-span-3">¥ 1,500,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-high px-2 py-1 text-xs rounded-full">高风险</span>
+              </div>
+              <div class="col-span-2">2023-07-11</div>
+            </div>
+            <!-- Task Item 6 -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer">
+              <div class="col-span-4">南京未来智能系统有限公司</div>
+              <div class="col-span-3">¥ 650,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-low px-2 py-1 text-xs rounded-full">低风险</span>
+              </div>
+              <div class="col-span-2">2023-07-10</div>
+            </div>
+            <!-- Task Item 7 -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer">
+              <div class="col-span-4">深圳绿源环保设备有限公司</div>
+              <div class="col-span-3">¥ 900,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-medium px-2 py-1 text-xs rounded-full">中风险</span>
+              </div>
+              <div class="col-span-2">2023-07-09</div>
+            </div>
+            <!-- Task Item 8 -->
+            <div class="task-item grid grid-cols-12 py-3 px-4 text-sm border-b border-gray-100 cursor-pointer">
+              <div class="col-span-4">西安宏图软件开发有限公司</div>
+              <div class="col-span-3">¥ 420,000</div>
+              <div class="col-span-3">
+                <span class="risk-tag-high px-2 py-1 text-xs rounded-full">高风险</span>
+              </div>
+              <div class="col-span-2">2023-07-08</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Panel (40%) -->
+    <section class="w-[40%] flex flex-col gap-6">
+      
+      <!-- Company Info -->
+      <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+        <h3 class="text-base font-semibold mb-3">企业基本信息</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex">
+            <span class="text-gray-500 w-24">企业名称：</span>
+            <span>杭州智联科技有限公司</span>
+          </div>
+          <div class="flex">
+            <span class="text-gray-500 w-24">法人代表：</span>
+            <span>李建国</span>
+          </div>
+          <div class="flex">
+            <span class="text-gray-500 w-24">成立年限：</span>
+            <span>5 年</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Risk Report -->
+      <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex-1">
+        <h3 class="text-base font-semibold mb-4">AI风控引擎报告</h3>
+        
+        <!-- Credit Score Ring Chart -->
+        <div class="flex items-center mb-6">
+          <div id="creditChart" class="w-32 h-32"></div>
+          <div class="ml-4">
+            <div class="text-lg font-bold">信用分：78 / 100</div>
+            <div class="mt-1 text-sm text-gray-600">评分等级：良好</div>
+          </div>
+        </div>
+
+        <!-- AI Recommendation -->
+        <div class="mb-5">
+          <div class="text-sm text-gray-500 mb-1">AI建议</div>
+          <div class="p-3 bg-blue-50 text-blue-700 rounded-md text-sm">
+            建议通过，但需关注其短期负债情况及现金流稳定性。
+          </div>
+        </div>
+
+        <!-- Key Risk Indicators -->
+        <div>
+          <div class="text-sm text-gray-500 mb-2">关键风险提示</div>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <i class="fas fa-exclamation-circle text-orange-500 mt-1 mr-2"></i>
+              <span>近 3 个月银行流水环比下降 20%</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-exclamation-circle text-orange-500 mt-1 mr-2"></i>
+              <span>有 1 笔小额贷款（¥150,000）将于 30 天内到期</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-info-circle text-blue-500 mt-1 mr-2"></i>
+              <span>行业整体景气度处于中等水平</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Approval Actions -->
+      <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+        <h3 class="text-base font-semibold mb-4">审批操作</h3>
+        <div class="flex space-x-3 mb-4">
+          <button class="!rounded-button whitespace-nowrap flex-1 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium">通过</button>
+          <button class="!rounded-button whitespace-nowrap flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium">拒绝</button>
+          <button class="!rounded-button whitespace-nowrap flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">补充材料</button>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-2">审批意见（必填）</label>
+          <textarea class="w-full h-24 p-3 text-sm border border-gray-300 rounded-md focus:border-primary" placeholder="请输入您的审批意见..."></textarea>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Initialize ECharts ring chart
+    const chartDom = document.getElementById('creditChart');
+    const myChart = echarts.init(chartDom);
+    const option = {
+      animation: false,
+      series: [
+        {
+          type: 'gauge',
+          startAngle: 90,
+          endAngle: -270,
+          pointer: { show: false },
+          progress: {
+            show: true,
+            overlap: false,
+            roundCap: true,
+            clip: false,
+            itemStyle: {
+              color: '#2563eb'
+            }
+          },
+          axisLine: {
+            lineStyle: {
+              width: 8,
+              color: [[1, '#e2e8f0']]
+            }
+          },
+          splitLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: { show: false },
+          data: [{ value: 78 }],
+          detail: {
+            show: false
+          }
+        }
+      ]
+    };
+    myChart.setOption(option);
+    // Tab switching for filter tags
+    document.querySelectorAll('.filter-tag').forEach(tag => {
+      tag.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Sort button interaction
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        this.classList.toggle('active');
+      });
+    });
+
+    // Task item selection
+    document.querySelectorAll('.task-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.task-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
